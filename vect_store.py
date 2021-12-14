@@ -2,7 +2,14 @@ import math
 import unittest
 import numpy as np
 
+
 class Vector:
+    """Vector container
+
+    Args:
+        components (list):
+            x, y, z, ... direction components
+    """
 
     def __init__(self, *components, _origin=None):
         self._components = [float(v) for v in components]
@@ -124,12 +131,35 @@ class Vector:
         return other * scalar == self
 
     def is_orthogonal(self, other):
+        """Returns True if vectors are orthogonal
+        Args:
+            other (Vector):
+                other vector to be compared against
+        Returns:
+              bool
+        """
         return self.dot(other) == 0
 
     def dot(self, other):
+        """compute the dot product
+        Args:
+            other (Vector):
+                other vector to be compared against
+        Returns:
+            float: dot product result
+        """
         return sum([a*b for a, b in zip(self, other)])
 
     def angle(self, other, deg=True):
+        """return the angle between this vector and another
+        Args:
+            other (Vector):
+                other vector to be compared against
+            deg (bool):
+                return result in degrees (radians if false)
+        Returns:
+            float: angle between the two vectors
+        """
         # A.B = |A||B| cos(theta)
         # ==> theta = acos(A.B/|A||B|)
 
@@ -138,7 +168,13 @@ class Vector:
         return angle * 180 / math.pi if deg else angle
 
     def cross(self, other):
-
+        """compute the cross product of vectors
+        Args:
+            other (Vector):
+                other vector to be compared against
+        Returns:
+            Vector: Cross product
+        """
         return Vector(*np.cross(self.components, other.components))
 
     def point_along(self, frac):
@@ -146,6 +182,13 @@ class Vector:
         return tuple([o+d*frac for o, d in zip(self.origin, self)])
 
     def project(self, other):
+        """Project this vector onto another
+        Args:
+            other (Vector):
+                vector to be projected onto
+        Returns:
+            Vector: projected vector
+        """
         if not self.origin == other.origin:
             raise ValueError('vector origins must be identical')
 
@@ -170,7 +213,7 @@ class Vector:
 
         Args:
             axis (str, int): representation of the axis
-            x/0, y/1, z/2, 3, 4, ..., n
+                             x/0, y/1, z/2, 3, 4, ..., n
 
             val (float, int): value of this axis
 
@@ -214,6 +257,7 @@ class Vector:
 
 
     def plot(self, label=''):
+        """plot this vector on a matplotlib plot"""
         # plt.arrow(*self.origin, *self.components,
         #           width=0.01)
         plt.plot([self.origin[0], self.origin[0] + self.components[0]],
@@ -221,7 +265,7 @@ class Vector:
                  label=label)
 
 
-class TestVector(unittest.TestCase):
+class test_Vector(unittest.TestCase):
 
     def test_creation(self):
         vect = Vector(0, 10)

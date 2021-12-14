@@ -28,9 +28,10 @@ author = 'LBeal'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx_rtd_theme',
+              'sphinx.ext.napoleon',
+              'sphinx.ext.coverage',
               'sphinx.ext.autodoc',
-              'sphinx.ext.napoleon'
-]
+              ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -40,6 +41,35 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
+# don't test coverage for unittest tests
+coverage_ignore_pyobjects = ['test_*']
+
+autodoc_member_order = 'bysource'
+
+
+def autodoc_skip_member_handler(app, what, name, obj, skip, options):
+    # start patterns to exclude from autodoc
+    exclude_startswith = ['__',  # catch dunder functions
+                          'test_',  # ignore any tests
+                          ]
+
+    skip_start = any(name.startswith(pattern)
+                     for pattern in exclude_startswith)
+
+    # seems to still be documenting functions without docstrings,
+    # exclude those here
+    empty_doc = True
+    if hasattr(obj, '__doc__'):
+        empty_doc = False
+        docstr = obj.__doc__
+
+        if docstr is None:
+            empty_doc = True
+        if docstr == '':
+            empty_doc = True
+
+    skip = skip_start or empty_doc
+    return skip
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -52,3 +82,11 @@ html_theme = 'sphinx_rtd_theme'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+# sphinx-apidoc -f -o ./docs/apidoc/ -t ./docs/_templates/ .
+# sphinx-build -E -a -b html ./docs/ ./docs/_build/
+# sphinx-build -E -a -b coverage ./docs/ ./docs/_build/
+
+
+def setup(app):
+    app.connect('autodoc-skip-member', autodoc_skip_member_handler)

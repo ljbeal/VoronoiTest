@@ -13,7 +13,6 @@ class Regions(list):
     """Subclass list to store regions
 
     Allows for more powerful data access than a base list
-
     """
 
     @property
@@ -31,11 +30,11 @@ class Region:
     """Container for a Voronoi region
 
     Args:
-        Origin (x,y tuple): origin point of this region
+        origin (x,y tuple): origin point of this region
 
-        Points (list): list of x,y points defining this region
+        points (list): list of x,y points defining this region
 
-        Edge (bool): True if this region has some form of unbound edge
+        edge (bool): True if this region has some form of unbound edge
     """
 
     def __init__(self, origin, points, edge=False,
@@ -173,6 +172,7 @@ class Region:
             plt.title(str(title))
 
         return fig
+
 
 class Voronoi:
     """Container for a flexible 2D voronoi plot
@@ -364,6 +364,7 @@ class Voronoi:
         plt.ylim(0, self.limits['y'])
 
         return fig
+
 
 if __name__ == '__main__':
 
