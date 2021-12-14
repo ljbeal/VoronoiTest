@@ -1,0 +1,7 @@
+Undocumented Python objects
+===========================
+vect_store
+----------
+Classes:
+ * Vector
+
