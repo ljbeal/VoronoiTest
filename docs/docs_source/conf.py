@@ -12,6 +12,7 @@
 #
 import os.path as p
 import sys
+import yaml
 import types
 import inspect
 
@@ -24,7 +25,6 @@ DEBUG = True
 project = 'VoronoiTest'
 copyright = '2021, LBeal'
 author = 'LBeal'
-
 
 # -- General configuration ---------------------------------------------------
 
@@ -49,7 +49,6 @@ coverage_ignore_pyobjects = ['test_*']
 
 autodoc_member_order = 'bysource'
 
-
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -61,6 +60,7 @@ html_theme = 'sphinx_rtd_theme'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['../_static']
+
 
 # sphinx-apidoc -f -o ./docs/docs_source/apidoc/ -t ./docs/_templates/ .
 # sphinx-build -E -a -b html ./docs/docs_source/ ./docs/
@@ -81,9 +81,9 @@ class Coverage:
             sphinx-build app, for connections
     """
 
-    DEBUG = False
+    DEBUG = True
 
-    def __init__(self, app, logfile='coverage.txt'):
+    def __init__(self, app, logfile='coverage.yml'):
 
         # initialise connections with the sphinx builder
         self._connect_funcs(app)
@@ -98,14 +98,14 @@ class Coverage:
         # section tracking
         self._current_section = ''
         # self._current__file__ = ''
-        self._current__load__ = ''
+        self._current_loader = ''
         self._sourcefile = ''
 
         # exclude patterns
         self.exclude_startswith = ['__',  # catch dunder functions
                                    'test_',  # ignore any tests
                                    '_',  # private members
-                                  ]
+                                   ]
 
     def _connect_funcs(self, app):
         app.connect('autodoc-skip-member', self.autodoc_skip)
@@ -126,7 +126,7 @@ class Coverage:
 
         Returns:
             (bool) skip:
-                skip flag passed back to autodoc
+                skip flag passed back to autodoc. True to skip documentation
         """
         self._autodoc = True
 
@@ -151,6 +151,11 @@ class Coverage:
             if docstr is None:
                 empty_doc = True
             if docstr == '':
+                empty_doc = True
+            if docstr == 'skip':
+                # skip documenting this object
+                # as it still _has_ a docstring, should still be caught
+                # TODO: verify
                 empty_doc = True
 
         if empty_doc:
@@ -185,33 +190,23 @@ class Coverage:
         print('Coverage analysis complete, writing log at ' +
               self._logpath)
 
-        sphinx_objects = app.env.domaindata['py']['objects'].keys()
+        sphinx_objects = list(app.env.domaindata['py']['objects'].keys())
         undoc = sorted(list(set(self.objects) - set(sphinx_objects)))
-        undoc_pc = 100 - 100*len(undoc)/len(self.objects)
+        undoc_pc = 100 - 100 * len(undoc) / len(self.objects)
 
         if self.DEBUG:
-            print('#'*24 + ' Documented objects:')
+            print('#' * 24 + ' Documented objects:')
             print(sphinx_objects)
-            print('#'*24 + ' Objects found in source:')
+            print('#' * 24 + ' Objects found in source:')
             print(self.objects)
-            print('#'*24 + ' Undocumented objects:')
+            print('#' * 24 + ' Undocumented objects:')
             print(undoc)
-            print('#'*24 + ' Coverage percentage:')
-            print(f'{undoc_pc:.2f}')
+            print('#'*24 + ' Results:')
+        print(f'Code coverage percentage: {undoc_pc:.2f}')
 
         with open(self._logpath, 'w+') as o:
-
-            o.write(initial_log_line+'\n')
-            o.write('='*len(initial_log_line)+'\n')
-
-            for name in undoc:
-                o.write('\n'+name)
-
-            o.write('\n\n')
-            o.write('Coverage percentage:\n')
-            o.write('--------------------\n')
-            o.write(f'{undoc_pc:.2f}% of discovered objects documented\n')
-            o.write(f'{len(undoc)} items are missing docstrings')
+            yaml.dump({'Undocumented objects': undoc,
+                       'Coverage Percentage': undoc_pc}, o)
 
     def source_read(self, app, docname, source):
         """Hook into sphinx source read function"""
@@ -238,7 +233,7 @@ class Coverage:
         """
         appname = rootname + '.' + objname
         if self.DEBUG:
-            print('\t'*depth + f'considering {appname}', end='... ')
+            print('\t' * depth + f'considering {appname}', end='... ')
         msg = []
 
         skip = False
@@ -255,7 +250,7 @@ class Coverage:
         #         msg.append('external import, ')
 
         if hasattr(obj, '__loader__'):
-            if obj.__loader__ != self._current__load__:
+            if obj.__loader__ != self._current_loader:
                 skip = True
                 msg.append('loader mismatch (external import?), ')
 
@@ -275,7 +270,7 @@ class Coverage:
                 # also recursively grab members, if we're not already skipping
                 for membername, member in vars(obj).items():
                     self._count_object(membername, member,
-                                       appname, depth+1)
+                                       appname, depth + 1)
 
         # specific debugging
         # if objname in ['TEST', 'endpoint']:
@@ -289,14 +284,15 @@ class Coverage:
         elif self.DEBUG:
             print(''.join(msg)[:-2] + '. Skipped.')
 
-    def obj_prepro(self, app, what, name, obj, options, signature, return_annotation):
+    def obj_prepro(self, app, what, name, obj, options, signature,
+                   return_annotation):
         """Hook into sphinx object call and store the object members"""
         if self.DEBUG:
             print('new section,', name)
         self._current_section = name
 
         # self._current__file__ = getattr(obj, '__file__', '')
-        self._current__load__ = getattr(obj, '__loader__', '')
+        self._current_loader = getattr(obj, '__loader__', '')
 
         modname = getattr(obj, '__module__', None)
         # loader = getattr(obj, '__loader__', None)
