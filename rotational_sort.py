@@ -3,6 +3,17 @@ import matplotlib.pyplot as plt
 
 from vect_store import Vector
 
+def documented_function(arg):
+    """Test function to make sure that the coverage tester is working"""
+
+    return None
+
+def nondocumented(arg):
+    return False
+
+def skipdocumented(arg):
+    """skip"""
+    return True
 
 def rotational_sort(points, ids=None, ccw=False, centre=None):
     """Given a list of x, y points, sort by angle around a midpoint.

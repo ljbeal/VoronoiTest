@@ -2,6 +2,7 @@ import math
 import unittest
 import numpy as np
 
+TEST = 'testvalue'
 
 class Vector:
     """Vector container
@@ -20,7 +21,16 @@ class Vector:
         self._origin = tuple(self._origin)
 
     def __repr__(self):
-        return f'vect: {self._components}'
+        if sum(self._origin) == 0:
+            ret = ['Vector(']
+            for c in self._components:
+                ret.append(str(c) + ', ')
+            ret = ''.join(ret)[:-2] + ')'
+
+        else:
+            ret = f'Vector.point_and_direction({self._origin}, {tuple(self._components)})'
+
+        return ret
 
     def __iter__(self):
         return (v for v in self._components)
@@ -39,15 +49,12 @@ class Vector:
         if type(other) in [int, float]:
             return Vector(*[other*v for v in self])
 
-    def __key(self):
-        return tuple(self._components)
-
     def __hash__(self):
-        return hash(self.__key)
+        return hash(tuple(self._components))
 
     def __eq__(self, other):
         if isinstance(other, Vector):
-            return self.__key() == other.__key()
+            return self.__hash__() == other.__hash__()
         else:
             raise NotImplementedError('can only compare Vector to Vector')
 
@@ -237,7 +244,7 @@ class Vector:
         test = Vector.point_and_direction([(1-v)*val for v in dirn],
                                           [v * m * 1.2 for v, m
                                            in zip(dirn, self.endpoint)])
-        print(test)
+        # print(test)
         if self.is_parallel(test):
             raise ValueError(f'vector is parallel to axis {axis}={val}')
 
@@ -255,6 +262,21 @@ class Vector:
         if axis == 1:
             return [solve, val]
 
+    def distance_to_origin(self, point):
+
+        cumulator = []
+        for i in range(len(point)):
+            if i < len(self._origin):
+                c0 = self._origin[i]
+            else:
+                c0 = 0
+            c1 = point[i]
+
+            d = c0 - c1
+
+            cumulator.append(d**2)
+
+        return sum(cumulator)**0.5
 
     def plot(self, label=''):
         """plot this vector on a matplotlib plot"""
@@ -263,6 +285,16 @@ class Vector:
         plt.plot([self.origin[0], self.origin[0] + self.components[0]],
                  [self.origin[1], self.origin[1] + self.components[1]],
                  label=label)
+
+
+class subVector(Vector):
+
+    def this_is_just_a_test(self):
+        pass
+
+    def this_is_just_a_test_but_with_doc(self):
+        "this is just a test"
+        pass
 
 
 class test_Vector(unittest.TestCase):
@@ -356,11 +388,21 @@ if __name__ == '__main__':
     #   also need to align origins on vector operations
 
     A = Vector.from_points((1, 2), (7, 12))
-
+    A = Vector.point_and_direction((8.45, 2.2), (5.931990380498499, -8.050558373533681, 0.0))
+    print(A.distance_to_origin((8.45, 2.2, 1)))
     A.plot()
 
-    intersect = A.intersect_boundary('y', 0)
+    val = 10
+    axis = 'y'
 
+    intersect = A.intersect_boundary(axis, val)
+    if axis == 'x':
+        plt.axvline(val, color='r')
+    else:
+        plt.axhline(val, color='r')
     plt.plot(*intersect, color='orange', marker='o')
+
+    plt.xlim(0,10)
+    plt.ylim(0,10)
 
     plt.show()

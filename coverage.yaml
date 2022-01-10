@@ -1,0 +1,14 @@
+Coverage Percentage: 81.81818181818181
+Skipped Objects:
+- rotational_sort.skipdocumented
+Undocumented objects:
+- docs_inheritance_test.cross_file_vector.undocumented_crossfile_func
+- docs_inheritance_test.subVector.nondocumented
+- rotational_sort.nondocumented
+- vect_store.Vector.components
+- vect_store.Vector.distance_to_origin
+- vect_store.Vector.endpoint
+- vect_store.Vector.magnitude
+- vect_store.Vector.origin
+- vect_store.subVector
+- vect_store.subVector.this_is_just_a_test
